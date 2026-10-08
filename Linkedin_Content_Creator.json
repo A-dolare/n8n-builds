@@ -1,0 +1,561 @@
+{
+  "name": "Linkdin Content Creator Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "7ff31fef-4b4a-410a-9c0d-e7be2739bbfa",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        176
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "9e5ad8c4-f6e3-4db5-bac7-9329bfc858ed",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Linkdin Posts",
+          "cachedResultUrl": "SHEET_url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Content",
+          "cachedResultUrl": "SHEET_url"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "To Do"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "226ca8a0-db97-4591-b5dd-517a33e35553",
+      "name": "Get row(s) in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Topic: {{ $json.Topic }}\nContent: {{ $json.Content }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert LinkedIn thought-leadership writer specializing in Technology, Marketing, Business/Operations, Education/EdTech, Legal/Compliance, and adjacent fields.\n\n## YOUR TASK\n\nYou will receive a **topic** and supplementary **content** in the user message. You will:\n\n1. Use the Tavily search tool to find 3–5 recent, relevant articles on the topic.\n2. Synthesize the articles + the provided content into ONE compelling LinkedIn post.\n3. From the Tavily search results, select 1–3 image URLs that visually support key data points or trends in the post.\n\n## OUTPUT FORMAT\n\nReturn ONLY a valid JSON object. No markdown fences, no text before or after.\n\n{\n  \"headline\": \"Short bold headline with one relevant emoji\",\n  \"post\": \"Full LinkedIn post body (150-350 words, max 450)\",\n  \"images\": [\n    { \"url\": \"https://...\", \"purpose\": \"What this image supports\" }\n  ],\n  \"hashtags\": [\"#Tag1\", \"#Tag2\", \"#Tag3\"]\n}\n\nIf no suitable images are found, return: \"images\": []\n\n## POST STRUCTURE (follow this order in \"post\")\n\n1. **Hook** — one-line opening that grabs attention\n2. 📊 **Key Findings** — 3–5 bullets with stats/data from articles\n3. 🔍 **Why This Matters** — impact on developers, engineers, business owners, students\n4. 🚀 **How You Can Position Yourself** — specific skills, tools, frameworks, certifications\n5. 💡 **Key Takeaway** — one forward-looking sentence\n6. Optional: one discussion question to drive comments\n\nThe post must implicitly answer:\n- What happened?\n- Why does it matter?\n- Why should people in this domain care?\n- What opportunities or risks does it create?\n- What should readers learn or do next?\n\n## TONE\n\n- Professional, credible, optimistic, practical, future-focused\n- NO fear-mongering, doom predictions, clickbait, or excessive hype\n\n## EVIDENCE\n\n- Ground claims in statistics, studies, market data from the articles\n- Cite numbers inline (e.g., \"78% efficiency gain\", \"$4.2T by 2030\")\n- Prioritize measurable insights over opinions\n\n## FORMATTING\n\n- Short paragraphs (1–2 sentences)\n- Bold for key insights\n- Non-human emojis only: 🚀 📈 📊 🔍 🔐 ⚡ 💡 🌍 🏢 🛡️ 📉 📚 🔬 🎯 🔄 ☁️ 🤖 \n- NO human emojis (no 👍👏🙌🤝 etc.)\n\n## LENGTH\n\n- 150–350 words (hard max 450)\n- Do NOT include reasoning, notes, or article summaries in the output\n\n## IMAGE SELECTION RULES\n\nWhen picking images from Tavily search results, apply ALL of the following filters:\n\n**Inclusion criteria (ALL must be met):**\n- Directly supports a specific stat, trend, or finding stated in the post\n- Materially improves understanding of the topic\n- Suitable for professional LinkedIn publishing\n\n**Exclusion criteria (reject if ANY apply):**\n- Contains people, animals, insects, or any living creatures\n- Is a screenshot (news, social media, app, website)\n- Has visible watermarks, stock photo overlays, or branding\n- Is a company logo, branded marketing asset, or editorial/news photo\n- Is a celebrity or identifiable person photo\n- Licensing is unclear or cannot be confirmed as free for commercial reuse\n\n**Preferred image types:**\n- Data visualizations, charts, graphs\n- Architecture diagrams, system diagrams\n- Infographics with no visible branding\n- Abstract/technical illustrations\n- Public-domain or CC0 licensed visuals\n\n**If you cannot confirm with high confidence that an image is free of copyright restrictions, DO NOT include it. Return \"images\": [] rather than risk a copyright violation.**\n\n- Max 3 images\n- Return the full image URL exactly as it appears in the Tavily result\n\n## CONSTRAINTS\n\n- Output ONLY the JSON object — nothing else\n- Do NOT use markdown code fences\n- Do NOT add explanations, notes, or analysis outside the JSON\n- If Tavily returns thin or irrelevant results, still produce a post using the provided **content** as the primary source   ",
+          "maxIterations": 5
+        }
+      },
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {}
+      },
+      "id": "471f9f3f-2d13-4eda-b294-4ba621a1fcee",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        544,
+        208
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"headline\": {\n      \"type\": \"string\",\n      \"description\": \"Short bold headline with one relevant emoji\"\n    },\n    \"post\": {\n      \"type\": \"string\",\n      \"description\": \"Full LinkedIn post body, 150-350 words\"\n    },\n    \"images\": {\n      \"type\": \"array\",\n      \"description\": \"Array of image objects. Empty array if no suitable images found.\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"url\": { \"type\": \"string\" },\n          \"purpose\": { \"type\": \"string\" }\n        },\n        \"required\": [\"url\"]\n      }\n    },\n    \"hashtags\": {\n      \"type\": \"array\",\n      \"description\": \"3-5 relevant hashtags\",\n      \"items\": { \"type\": \"string\" }\n    }\n  },\n  \"required\": [\"headline\", \"post\", \"images\", \"hashtags\"]\n}",
+        "autoFix": true
+      },
+      "id": "76c8f2e5-06d9-47d1-880e-ddef073601da",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "038d65bf-6078-4377-a37f-26cd38f30fa3",
+              "leftValue": "={{ $json.output.images.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b57b909a-7c31-469c-ad57-e1581dcc68a3",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://{{%20$json.imageurl%20}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "image.png"
+            }
+          }
+        }
+      },
+      "id": "81572bc8-711f-49ad-83c4-0a354d66796c",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "id": "8f808d6d-3bba-493a-9463-4c59ab562240",
+      "name": "Convert Image to Binary",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1312,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "person": "LINKEDIN_PERSON_ID",
+        "text": "={{ $('AI Agent').item.json.output.post }}",
+        "additionalFields": {}
+      },
+      "id": "3fba392b-d2dc-4c18-ba6f-84c606e40050",
+      "name": "Create a post",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        16
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "LINKEDIN_CREDENTIAL",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "=Research: {{ $json.Topic }}\n\nFind:\n• Latest developments, announcements, research, market trends, and industry shifts.\n• Key statistics, growth rates, survey results, benchmarks, adoption metrics, and market projections.\n• Evidence-backed insights from reputable sources.\n• Impact on software developers, CS students, engineers, DevOps, cybersecurity, cloud, AI, and IT professionals.\n• How this trend affects careers, workflows, hiring, productivity, security, infrastructure, or software development.\n• Relevant technologies, programming languages, frameworks, tools, certifications, and skills professionals should learn to benefit from this trend.\n• Future opportunities and practical takeaways for technical professionals.\n• Insights suitable for a professional LinkedIn audience.\n\n\nReturn:\n1. Executive Summary\n2. Key Statistics\n3. Market Research & Studies\n4. Industry Trends\n5. Impact on Technical Professionals\n6. Skills & Technologies to Learn\n7. Future Opportunities\n8. Recommended Images\n9. Sources",
+        "options": {
+          "topic": "general",
+          "search_depth": "basic",
+          "chunks_per_source": 3,
+          "time_range": "month",
+          "days": 7,
+          "include_images": true
+        }
+      },
+      "id": "e9e58386-5822-4743-96ba-c0caf255dffd",
+      "name": "Search",
+      "type": "@tavily/n8n-nodes-tavily.tavily",
+      "typeVersion": 1,
+      "position": [
+        2448,
+        432
+      ],
+      "credentials": {
+        "tavilyApi": {
+          "id": "Tavily_CREDENTIAL",
+          "name": "Tavily account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "tavilyApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $('Get row(s) in sheet').item.json.Topic }}\",\n  \"auto_parameters\": false,\n  \"topic\": \"general\",\n  \"search_depth\": \"basic\",\n  \"chunks_per_source\": 3,\n  \"max_results\": 5,\n  \"time_range\": null,\n  \"start_date\": \"2025-02-09\",\n  \"end_date\": \"2025-12-29\",\n  \"include_answer\": false,\n  \"include_raw_content\": false,\n  \"include_images\": false,\n  \"include_image_descriptions\": false,\n  \"include_favicon\": false,\n  \"include_domains\": [],\n  \"exclude_domains\": [],\n  \"country\": null,\n  \"language\": \"en\",\n  \"filter_by_language\": false,\n  \"exact_match\": false,\n  \"safe_search\": false,\n  \"include_usage\": false\n} ",
+        "options": {}
+      },
+      "id": "0f61c5f6-687b-49be-8ac8-d9dce48c1ada",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2640,
+        400
+      ],
+      "credentials": {
+        "tavilyApi": {
+          "id": "Tavily_CREDENTIAL",
+          "name": "Tavily account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.linkedin.com/rest/posts/urn:li:share:YOUR_POST_URN",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_ACCESS_TOKEN"
+            },
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2368,
+        640
+      ],
+      "id": "f423309b-5aba-43ea-9ed5-2cdc8c559863",
+      "name": "HTTP Request1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "a6fd52ee-0b0f-46a0-acc2-d23d7dea2a8f",
+      "name": "Tavily Web Search",
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        768,
+        208
+      ],
+      "credentials": {
+        "tavilyApi": {
+          "id": "Tavily_CREDENTIAL",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Linkdin Posts",
+          "cachedResultUrl": "SHEET_url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Content",
+          "cachedResultUrl": "SHEET_url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "={{ $('Get row(s) in sheet').item.json.Status }}",
+            "Topic": "={{ $('Get row(s) in sheet').item.json.Topic }}"
+          },
+          "matchingColumns": [
+            "Status"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Content",
+              "displayName": "Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "eedad757-16f9-4bdd-b4e4-74019a79f403",
+      "name": "Mark Status in Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1488,
+        16
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Status in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Convert Image to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Image to Binary": {
+      "main": [
+        [
+          {
+            "node": "Mark Status in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Web Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Status in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "workflow_id"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
